@@ -35,6 +35,15 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("ThirdScriptExample");
 
+void PacketsInQueue(std::string context, uint32_t oldValue, uint32_t newValue)
+{
+   NS_LOG_UNCOND (Simulator::Now ().GetSeconds () << ":\t" << " PacketsInQueue: " << newValue);
+}
+
+float SIM_TIME = 50;
+float MAX_PACKETS = 1000;
+float INTERVAL_TIME = 1.0;
+
 int 
 main (int argc, char *argv[])
 {
@@ -46,7 +55,6 @@ main (int argc, char *argv[])
   cmd.AddValue ("tracing", "Enable pcap tracing", tracing);
 
   cmd.Parse (argc,argv);
-
 
   if (verbose)
     {
@@ -94,27 +102,30 @@ main (int argc, char *argv[])
 
   ApplicationContainer serverApps = echoServer.Install (csmaNodes.Get (1)); //serwer na n2
   serverApps.Start (Seconds (1.0));
-  serverApps.Stop (Seconds (10.0));
+  serverApps.Stop (Seconds (SIM_TIME));
 
   UdpEchoClientHelper echoClient (csmaInterfaces.GetAddress (1), 9);
-  echoClient.SetAttribute ("MaxPackets", UintegerValue (1));
-  echoClient.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
+  echoClient.SetAttribute ("MaxPackets", UintegerValue (MAX_PACKETS));
+  echoClient.SetAttribute ("Interval", TimeValue (Seconds (INTERVAL_TIME)));
   echoClient.SetAttribute ("PacketSize", UintegerValue (1024));
 
   ApplicationContainer clientApps = 
     echoClient.Install (p2pNodes.Get(0)); // klient na n0
   clientApps.Start (Seconds (2.0));
-  clientApps.Stop (Seconds (10.0));
+  clientApps.Stop (Seconds (SIM_TIME));
 
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
-  Simulator::Stop (Seconds (10.0));
+  Simulator::Stop (Seconds (SIM_TIME));
 
   if (tracing == true)
     {
       pointToPoint.EnablePcapAll ("zad1");
       csma.EnablePcap ("zad1", csmaDevices.Get (0), true);
     }
+ 
+
+  Config::Connect ("/NodeList/1/DeviceList/0/$ns3::PointToPointNetDevice/TxQueue/PacketsInQueue", MakeCallback(&PacketsInQueue));
 
   Simulator::Run ();
   Simulator::Destroy ();
