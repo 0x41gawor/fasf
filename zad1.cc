@@ -37,7 +37,10 @@ NS_LOG_COMPONENT_DEFINE ("ThirdScriptExample");
 
 void PacketsInQueue(std::string context, uint32_t oldValue, uint32_t newValue)
 {
-   NS_LOG_UNCOND (Simulator::Now ().GetSeconds () << ":\t" << " PacketsInQueue: " << newValue);
+   NS_LOG_UNCOND (
+     Simulator::Now ().GetSeconds () << ":\t" 
+     << " PacketsInQueue: " << newValue
+     );
 }
 
 float SIM_TIME = 50;
@@ -123,9 +126,16 @@ main (int argc, char *argv[])
       pointToPoint.EnablePcapAll ("zad1");
       csma.EnablePcap ("zad1", csmaDevices.Get (0), true);
     }
+
+   Ptr<Queue> txQ = (p2pDevices.Get(0)->GetObject<PointToPointNetDevice>())->GetQueue();
+   UintegerValue maxPackets = txQ->GetMaxPackets();
+   NS_LOG_UNCOND ("QUEUE MAX_PACKETS: " << maxPackets.Get());
  
 
-  Config::Connect ("/NodeList/1/DeviceList/0/$ns3::PointToPointNetDevice/TxQueue/PacketsInQueue", MakeCallback(&PacketsInQueue));
+  Config::Connect(
+    "/NodeList/1/DeviceList/0/$ns3::PointToPointNetDevice/TxQueue/PacketsInQueue",
+    MakeCallback(&PacketsInQueue)
+    );
 
   Simulator::Run ();
   Simulator::Destroy ();
